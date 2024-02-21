@@ -1,1 +1,15 @@
-<router-outlet />
+<mat-drawer-container hasBackdrop class="main-container">
+  <mat-drawer #drawer mode="side" class="main-menu">
+    <a [routerLink]="[APP_PATHS.SVG_EDITOR]" routerLinkActive="router-link-active">{{ 'SVG Editor Example' }}</a>
+  </mat-drawer>
+  <mat-drawer-content class="main-content">
+    <header>
+      <button mat-icon-button color="primary" aria-label="Toggle menu sidenav" (click)="drawer.toggle()">
+        <mat-icon>menu</mat-icon>
+      </button>
+    </header>
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </mat-drawer-content>
+</mat-drawer-container>
