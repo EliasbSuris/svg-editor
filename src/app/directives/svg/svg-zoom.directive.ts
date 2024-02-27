@@ -23,7 +23,7 @@ export class SvgZoomDirective {
   }
 
   private zoom(event: WheelEvent): void {
-    if (this.svgPanDirective?.isDragging) {
+    if (this.svgPanDirective?.isPanning) {
       return;
     }
     if (!this.draw) {

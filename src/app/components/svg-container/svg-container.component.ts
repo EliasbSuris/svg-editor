@@ -25,19 +25,17 @@ export class SvgContainerComponent {
       });
       const globalStyle = this.draw.style();
       globalStyle.rule('.myclass:hover', { filter: 'brightness(50%)' });
+      globalStyle.rule('.draggable', { cursor: 'move' });
       const plantImage = this.draw.image('assets/imgs/TeslaLUD.png');
       plantImage.size(800, 1000);
-      const r1 = this.draw.rect(100, 100).fill('red').addClass('myclass');
+      const r1 = this.draw.rect(100, 100).fill('red').addClass('myclass').addClass('draggable');
+      r1.id('rect-1');
       r1.element('title').words("I'm a animated rectangle");
-      const defs = this.draw.defs();
       const layer = this.draw.group();
-      defs.add(layer);
-      const c1 = new Circle({ r: 50, cx: 150, cy: 150, id: 'prueba-circle' }).move(100, 100);
-      c1.element('title').words("I'm a circle");
+      const c1 = new Circle({ r: 50, cx: 150, cy: 150, id: 'circ-1', class: 'draggable' }).move(100, 100).fill('blue');
+      const c2 = new Circle({ r: 50, cx: 150, cy: 150, id: 'circ-2' }).move(200, 200).fill('green');
       layer.add(c1);
-      layer.circle(50);
-      this.draw.use(layer).move(300, 500).fill('blue');
-      this.draw.use(layer).move(500, 300).fill('green');
+      layer.add(c2);
 
       r1.animate(2000, 500, 'now').move(200, 0).animate(2000, 500).dmove(100, 100).animate(1000, 0).size(150, 150);
       this.zone.runOutsideAngular(() => {

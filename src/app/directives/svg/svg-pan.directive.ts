@@ -7,13 +7,13 @@ import { Svg } from '@svgdotjs/svg.js';
   standalone: true,
 })
 export class SvgPanDirective {
-  public isDragging: boolean = false;
+  public isPanning: boolean = false;
   private svgContainerComponent = inject(SvgContainerComponent);
   private zone = inject(NgZone);
   private draw!: Svg;
-  private dragStartX: number = 0;
-  private dragStartY: number = 0;
-  private isMouseWheelDown: boolean = false;
+  private panStartX: number = 0;
+  private panStartY: number = 0;
+  private isMouseDown: boolean = false;
 
   constructor() {
     effect(() => {
@@ -24,58 +24,60 @@ export class SvgPanDirective {
           event.preventDefault();
           if (mouseEvent.button === 1 || mouseEvent.button === 0) {
             // Check if the middle mouse button (wheel) is pressed
-            this.isMouseWheelDown = true;
-            this.startDrag(mouseEvent);
+            this.isMouseDown = true;
+            this.startPan(mouseEvent);
           }
         });
         this.draw.on('mouseup', event => {
           const mouseEvent = event as MouseEvent;
           mouseEvent.preventDefault();
-          console.log(event);
           if (mouseEvent.button === 1 || mouseEvent.button === 0) {
             // Check if the middle mouse button (wheel) is released
-            this.isMouseWheelDown = false;
-            this.endDrag(mouseEvent);
+            this.isMouseDown = false;
+            this.endPan();
           }
         });
-        this.draw.on('mouseleave', event => this.endDrag(event as MouseEvent));
+        this.draw.on('mouseleave', () => this.endPan());
         this.draw.on('mousemove', event => {
           const mouseEvent = event as MouseEvent;
           mouseEvent.preventDefault();
-          if (this.isMouseWheelDown) {
+          if (this.isMouseDown) {
             // Check if the middle mouse button (wheel) is currently pressed
-            this.drag(mouseEvent);
+            this.pan(mouseEvent);
           }
         });
       });
     });
   }
 
-  private startDrag(event: MouseEvent): void {
-    this.isDragging = true;
-    this.dragStartX = event.clientX;
-    this.dragStartY = event.clientY;
-    this.toggleDraggingCursor(true);
+  private startPan(event: MouseEvent): void {
+    if (this.isTargetDraggable(event.target as Element)) {
+      return;
+    }
+    this.isPanning = true;
+    this.panStartX = event.clientX;
+    this.panStartY = event.clientY;
+    this.togglePanningCursor(true);
   }
 
-  private toggleDraggingCursor(show: boolean): void {
+  private togglePanningCursor(show: boolean): void {
     if (!this.draw) {
       return;
     }
     show ? this.draw.css('cursor', 'grabbing') : this.draw.css('cursor', 'default');
   }
 
-  private endDrag(event: MouseEvent): void {
-    this.isDragging = false;
-    this.toggleDraggingCursor(false);
+  private endPan(): void {
+    this.isPanning = false;
+    this.togglePanningCursor(false);
   }
 
-  private drag(event: MouseEvent): void {
+  private pan(event: MouseEvent): void {
     if (!this.draw) {
       return;
     }
 
-    if (this.isDragging) {
+    if (this.isPanning) {
       // Get the bounding box of the SVG element
       const svgBox = this.draw?.rbox();
 
@@ -83,13 +85,13 @@ export class SvgPanDirective {
         return;
       }
 
-      // Calculate the distance the mouse has moved since the last drag event
-      const deltaX = event.clientX - this.dragStartX;
-      const deltaY = event.clientY - this.dragStartY;
+      // Calculate the distance the mouse has moved since the last pan event
+      const deltaX = event.clientX - this.panStartX;
+      const deltaY = event.clientY - this.panStartY;
 
-      // Update the drag start position to the current mouse position
-      this.dragStartX = event.clientX;
-      this.dragStartY = event.clientY;
+      // Update the pan start position to the current mouse position
+      this.panStartX = event.clientX;
+      this.panStartY = event.clientY;
 
       // Get the current viewBox
       const viewBox = this.draw.viewbox();
@@ -103,5 +105,9 @@ export class SvgPanDirective {
       // Set the new viewBox
       this.draw.viewbox(newX, newY, viewBox.width, viewBox.height);
     }
+  }
+
+  private isTargetDraggable(target: Element): boolean {
+    return target.classList.contains('draggable');
   }
 }
