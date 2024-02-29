@@ -12,6 +12,7 @@ export class SvgDragDropDirective {
   private draw!: Svg;
 
   private selectedElement!: SvgElement | null;
+  private isElementWithOverlay = false;
   private offset!: Point;
 
   constructor() {
@@ -31,19 +32,37 @@ export class SvgDragDropDirective {
       return;
     }
     const targetElement = evt.target as Element;
+    console.log(evt, targetElement, targetElement.classList.contains('draggable'), targetElement.id);
     if (targetElement.classList.contains('draggable') && targetElement.id) {
       const id = targetElement.id;
-      this.selectedElement = SVG(`#${id}`);
+      const svgTarget = SVG(`#${id}`);
+      console.log(svgTarget.parent());
+      this.isElementWithOverlay = id.includes('-overlay');
+      if (this.isElementWithOverlay) {
+        this.selectedElement = svgTarget.parent() as SvgElement;
+      } else {
+        this.selectedElement = svgTarget;
+      }
+
       this.offset = this.draw.point(evt.clientX, evt.clientY);
-      this.offset.x -= Number(this.selectedElement.x());
-      this.offset.y -= Number(this.selectedElement.y());
+      this.offset.x -= Number(svgTarget.x());
+      this.offset.y -= Number(svgTarget.y());
     }
   }
+
   private drag(evt: MouseEvent): void {
     if (this.selectedElement) {
       evt.preventDefault();
       const svgPoint = this.draw.point(evt.clientX, evt.clientY);
-      this.selectedElement.move(svgPoint.x - this.offset.x, svgPoint.y - this.offset.y);
+      if (this.isElementWithOverlay) {
+        // TODO: applying move to a G containing a USE element causes strange move for the USE element
+        // Applying move for each element one by one works
+        this.selectedElement.each((i, children) =>
+          children[i].move(svgPoint.x - this.offset.x, svgPoint.y - this.offset.y)
+        );
+      } else {
+        this.selectedElement.move(svgPoint.x - this.offset.x, svgPoint.y - this.offset.y);
+      }
     }
   }
   private endDrag(): void {
