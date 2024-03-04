@@ -2,6 +2,7 @@ import { Directive, NgZone, effect, inject } from '@angular/core';
 import { SvgContainerComponent } from '@components/svg-container/svg-container.component';
 import { Element as SvgElement, Point, SVG, Svg } from '@svgdotjs/svg.js';
 
+export const DRAGGABLE_CLASS = 'draggable';
 @Directive({
   selector: '[aorSvgDragDrop]',
   standalone: true,
@@ -31,22 +32,19 @@ export class SvgDragDropDirective {
     if (!evt.target) {
       return;
     }
-    const targetElement = evt.target as Element;
-    console.log(evt, targetElement, targetElement.classList.contains('draggable'), targetElement.id);
-    if (targetElement.classList.contains('draggable') && targetElement.id) {
-      const id = targetElement.id;
-      const svgTarget = SVG(`#${id}`);
-      console.log(svgTarget.parent());
+    const targetSvgElement = SVG(evt.target);
+    if (targetSvgElement.classes().includes(DRAGGABLE_CLASS)) {
+      const id = targetSvgElement.id();
       this.isElementWithOverlay = id.includes('-overlay');
       if (this.isElementWithOverlay) {
-        this.selectedElement = svgTarget.parent() as SvgElement;
+        this.selectedElement = targetSvgElement.parent() as SvgElement;
       } else {
-        this.selectedElement = svgTarget;
+        this.selectedElement = targetSvgElement;
       }
 
       this.offset = this.draw.point(evt.clientX, evt.clientY);
-      this.offset.x -= Number(svgTarget.x());
-      this.offset.y -= Number(svgTarget.y());
+      this.offset.x -= Number(targetSvgElement.x());
+      this.offset.y -= Number(targetSvgElement.y());
     }
   }
 
@@ -55,8 +53,8 @@ export class SvgDragDropDirective {
       evt.preventDefault();
       const svgPoint = this.draw.point(evt.clientX, evt.clientY);
       if (this.isElementWithOverlay) {
-        // TODO: applying move to a G containing a USE element causes strange move for the USE element
-        // Applying move for each element one by one works
+        // TODO: applying move to a G containing a USE element causes strange behaviour on USE element movement
+        // Workaround: applying move for each element one by one
         this.selectedElement.each((i, children) =>
           children[i].move(svgPoint.x - this.offset.x, svgPoint.y - this.offset.y)
         );
