@@ -41,18 +41,21 @@ export class SvgDragDropDirective {
       } else {
         this.selectedElement = targetSvgElement;
       }
-
       this.offset = this.draw.point(evt.clientX, evt.clientY);
+      // this.offset.x -= Number(this.selectedElement.x());
       this.offset.x -= Number(targetSvgElement.x());
+      // this.offset.y -= Number(this.selectedElement.y());
       this.offset.y -= Number(targetSvgElement.y());
     }
   }
 
   private drag(evt: MouseEvent): void {
+    // TODO: drag after resize not working as expected
     if (this.selectedElement) {
       evt.preventDefault();
       const svgPoint = this.draw.point(evt.clientX, evt.clientY);
-      if (this.isElementWithOverlay) {
+      const isUseElement = this.selectedElement.children().some(element => element.type === 'use');
+      if (isUseElement) {
         // TODO: applying move to a G containing a USE element causes strange behaviour on USE element movement
         // Workaround: applying move for each element one by one
         this.selectedElement.each((i, children) =>

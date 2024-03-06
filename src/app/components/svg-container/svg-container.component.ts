@@ -1,6 +1,17 @@
 import { Component, ElementRef, NgZone, Signal, computed, effect, inject, viewChild } from '@angular/core';
 import { DRAGGABLE_CLASS } from '@directives/svg/svg-drag-drop.directive';
-import { SELECTABLE_CLASS } from '@directives/svg/svg-selectable.directive';
+import {
+  RESIZABLE_CLASS,
+  RESIZE_BOTTOM_LEFT_CLASS,
+  RESIZE_BOTTOM_MID_CLASS,
+  RESIZE_BOTTOM_RIGHT_CLASS,
+  RESIZE_MID_LEFT_CLASS,
+  RESIZE_MID_RIGHT_CLASS,
+  RESIZE_TOP_LEFT_CLASS,
+  RESIZE_TOP_MID_CLASS,
+  RESIZE_TOP_RIGHT_CLASS,
+  SELECTABLE_CLASS,
+} from '@directives/svg/svg-selectable.directive';
 import { Circle, Rect, RectAttr, SVG, Svg, Element as SvgElement, Use } from '@svgdotjs/svg.js';
 
 @Component({
@@ -25,9 +36,7 @@ export class SvgContainerComponent {
         x: 0,
         y: 0,
       });
-      const globalStyle = this.draw.style();
-      globalStyle.rule('.myclass:hover', { filter: 'brightness(50%)' });
-      globalStyle.rule(`.${DRAGGABLE_CLASS}`, { cursor: 'move' });
+      this.addGlobalStyles(this.draw);
       const plantImage = this.draw.image('assets/imgs/TeslaLUD.png');
       plantImage.size(1000, 1000);
       const r1 = this.draw.rect(100, 100).fill('red').addClass('myclass').addClass(DRAGGABLE_CLASS);
@@ -35,7 +44,13 @@ export class SvgContainerComponent {
       r1.element('title').words("I'm a animated rectangle");
       const layer1 = this.draw.group();
       const draggableCircleGroup = layer1.group().id('circle-group').attr('pointer-events', 'visible');
-      const draggableCircle = new Circle({ r: 10, cx: 15, cy: 15, id: 'circ-1', class: DRAGGABLE_CLASS })
+      const draggableCircle = new Circle({
+        r: 10,
+        cx: 0,
+        cy: 0,
+        id: 'circ-1',
+        class: `${DRAGGABLE_CLASS} ${RESIZABLE_CLASS}`,
+      })
         .fill({ color: 'blue', opacity: 0.5 })
         // the rectangular area around the element can also receive pointer events (only Chrome)
         // .attr('pointer-events', 'bounding-box')
@@ -45,7 +60,8 @@ export class SvgContainerComponent {
       // .move(400, 400);
       const circleOverlay = this.createOverlay(draggableCircle);
       draggableCircleGroup.add(draggableCircle);
-      draggableCircleGroup.add(circleOverlay);
+      draggableCircle.after(circleOverlay);
+      // draggableCircleGroup.add(circleOverlay);
       draggableCircleGroup.move(400, 400);
       // draggableCircle.translate(5, 5);
       const c2 = new Circle({ r: 50, cx: 150, cy: 150, id: 'circ-2' }).move(200, 200).fill('green');
@@ -61,7 +77,8 @@ export class SvgContainerComponent {
         .id('robot-use')
         .fill('red')
         .size(30, 30);
-      robotGroup.add(this.createUseOverlay({ height: 30, width: 30, x: 0, y: 0 }, useRobot));
+      useRobot.after(this.createUseOverlay({ height: 30, width: 30, x: 0, y: 0 }, useRobot));
+      // robotGroup.add(this.createUseOverlay({ height: 30, width: 30, x: 0, y: 0 }, useRobot));
       robotGroup.move(500, 450);
       layer2.hide();
       layer2.show();
@@ -93,5 +110,19 @@ export class SvgContainerComponent {
       .addClass(DRAGGABLE_CLASS)
       .addClass(SELECTABLE_CLASS)
       .id(`${useElement.id()}-overlay`);
+  }
+
+  private addGlobalStyles(rootSvg: Svg): void {
+    const globalStyle = rootSvg.style();
+    globalStyle.rule('.myclass:hover', { filter: 'brightness(50%)' });
+    globalStyle.rule(`.${DRAGGABLE_CLASS}`, { cursor: 'move' });
+    globalStyle.rule(`.${RESIZE_TOP_LEFT_CLASS}`, { cursor: 'nw-resize' });
+    globalStyle.rule(`.${RESIZE_TOP_MID_CLASS}`, { cursor: 'n-resize' });
+    globalStyle.rule(`.${RESIZE_TOP_RIGHT_CLASS}`, { cursor: 'ne-resize' });
+    globalStyle.rule(`.${RESIZE_MID_LEFT_CLASS}`, { cursor: 'w-resize' });
+    globalStyle.rule(`.${RESIZE_MID_RIGHT_CLASS}`, { cursor: 'e-resize' });
+    globalStyle.rule(`.${RESIZE_BOTTOM_LEFT_CLASS}`, { cursor: 'sw-resize' });
+    globalStyle.rule(`.${RESIZE_BOTTOM_MID_CLASS}`, { cursor: 's-resize' });
+    globalStyle.rule(`.${RESIZE_BOTTOM_RIGHT_CLASS}`, { cursor: 'se-resize' });
   }
 }
